@@ -190,7 +190,7 @@ local function supports_sysupgrade()
 end
 
 local function supports_reset()
-	return (os.execute([[grep -sqE '"rootfs_data"|"ubi"' /proc/mtd]]) == 0)
+	return (os.execute([[grep -sqE '"rootfs_data"|"ubi"' /proc/mtd]]) == 0) or nixio.fs.access("/rom/lib/preinit/79_disk_ready")
 end
 
 local function storage_size()
@@ -290,7 +290,13 @@ function action_sysupgrade()
 			msg   = luci.i18n.translate("The system is flashing now.<br /> DO NOT POWER OFF THE DEVICE!<br /> Wait a few minutes before you try to reconnect. It might be necessary to renew the address of your computer to reach the device again, depending on your settings."),
 			addr  = (#keep > 0) and "192.168.1.1" or nil
 		})
-		fork_exec("sleep 1; killall dropbear uhttpd; sleep 1; /sbin/sysupgrade %s %q" %{ keep, image_tmp })
+		local erase_sda3 = ""
+		if nixio.fs.access("/rom/lib/preinit/79_disk_ready") then
+			if not http.formvalue("keep") == "1" then
+				erase_sda3 = 'echo erase >/dev/sda3;'
+			end
+		end
+		fork_exec("sleep 1; killall dropbear uhttpd; %s sleep 1; /sbin/sysupgrade %s %q" %{ erase_sda3, keep, image_tmp })
 	end
 end
 
@@ -351,7 +357,11 @@ function action_reset()
 			addr  = "192.168.1.1"
 		})
 
-		fork_exec("sleep 1; killall dropbear uhttpd; sleep 1; jffs2reset -y && reboot")
+		if nixio.fs.access("/rom/lib/preinit/79_disk_ready") then
+			fork_exec("sleep 1; killall dropbear uhttpd; sleep 1; echo erase >/dev/sda3 && reboot")
+		else
+			fork_exec("sleep 1; killall dropbear uhttpd; sleep 1; jffs2reset -y && reboot")
+		end
 		return
 	end
 
