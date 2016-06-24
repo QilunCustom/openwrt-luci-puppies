@@ -292,7 +292,7 @@ function action_sysupgrade()
 		})
 		local erase_sda3 = ""
 		if nixio.fs.access("/rom/lib/preinit/79_disk_ready") then
-			if not http.formvalue("keep") == "1" then
+			if not (http.formvalue("keep") == "1") then
 				erase_sda3 = 'echo erase >/dev/sda3;'
 			end
 		end
