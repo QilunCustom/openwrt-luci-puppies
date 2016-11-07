@@ -69,4 +69,28 @@ o = s:option(Flag, "sync", translate("Sync"))
 o.optional = true
 o.default = false
 
+
+s = m:section(TypedSection, "pppoeuser", translate("pppoe user config","pppoe user config"))
+s.template = "cbi/tblsection"
+s.anonymous = true
+s.addremove = true
+
+o = s:option(Flag, "enable", translate("enable", "enable"))
+o.default = false
+o.optional = false
+o.rmempty = false
+
+o = s:option(Value, "USERNAME", translate("Username","Username"), translate("Username","Username"))
+o.optional = false
+o.rmempty = false
+
+o = s:option(Value, "PASSWORD", translate("Password","Password"), translate("Password","Password"))
+o.rmempty = false
+o.password = true
+
+o = s:option(Value, "IPADDRESS", translate("IPADDRESS","IPADDRESS"), translate("IPADDRESS;default: *","IPADDRESS;default: *"))
+o.default = "*"
+o.optional = false
+o.rmempty = false
+
 return m
